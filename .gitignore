@@ -125,3 +125,15 @@ samconfig.toml
 # Ignore PowerPoint temp files
 ~$*.pptx
 ~$*.ppt
+
+# Temporary Office files
+~$*.pptx
+~$*.docx
+~$*.xlsx
+
+# IDE folders
+.vscode/
+.idea/
+
+# Cleanup script
+CLEANUP_REPO.sh
