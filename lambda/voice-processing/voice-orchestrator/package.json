@@ -1,0 +1,19 @@
+{
+  "name": "voice-orchestrator",
+  "version": "1.0.0",
+  "description": "Voice processing orchestrator with language detection and fallback mechanisms",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

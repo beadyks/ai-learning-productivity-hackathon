@@ -1,0 +1,19 @@
+{
+  "name": "lambda-optimizer",
+  "version": "1.0.0",
+  "description": "Lambda function optimizer for Voice Learning Assistant",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.400.0",
+    "@aws-sdk/client-cloudwatch": "^3.400.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.119",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

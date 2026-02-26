@@ -1,0 +1,31 @@
+{
+  "name": "voice-first-ai-learning-assistant",
+  "version": "1.0.0",
+  "description": "Voice-First AI Learning & Developer Productivity Assistant",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "cdk": "cdk",
+    "deploy": "cdk deploy",
+    "deploy:staging": "cdk deploy VoiceLearningAssistantStack-Staging",
+    "deploy:production": "cdk deploy VoiceLearningAssistantStack-Production",
+    "deploy:pipeline": "cdk deploy CICDPipelineStack",
+    "synth": "cdk synth",
+    "build:lambdas": "cd lambda && npm run build",
+    "test": "cd lambda && npm test",
+    "test:integration": "cd tests/integration && npm test",
+    "lint": "eslint . --ext .ts"
+  },
+  "keywords": ["ai", "learning", "voice", "aws"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "aws-cdk": "^2.100.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.100.0",
+    "constructs": "^10.0.0"
+  }
+}

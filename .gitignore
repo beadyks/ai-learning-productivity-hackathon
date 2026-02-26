@@ -1,0 +1,127 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
+*.js
+*.js.map
+*.d.ts
+!jest.config.js
+!scripts/*.js
+dist/
+build/
+cdk.out/
+.build/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# AWS
+.aws-sam/
+samconfig.toml
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+logs/
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+
+# CDK
+cdk.context.json
+
+# Secrets and credentials
+secrets.json
+credentials.json
+*.pem
+*.key
+*.cert
+
+# Python (for Lambda functions)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Terraform (if used)
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Compiled files
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Package files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Generated documentation
+site/
+
+# Backup files
+*~
+*.orig
+
+# Lock files (keep package-lock.json for reproducibility)
+# Uncomment if you want to ignore it
+# package-lock.json
+
+# Output files
+outputs.json
+stack-outputs.json
+
+# Local testing
+.aws-sam/
+samconfig.toml
+
+# Ignore PowerPoint temp files
+~$*.pptx
+~$*.ppt

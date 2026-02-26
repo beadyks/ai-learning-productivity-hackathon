@@ -1,0 +1,20 @@
+{
+  "name": "connection-pool",
+  "version": "1.0.0",
+  "description": "Connection pooling and caching utilities for Voice Learning Assistant",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.400.0",
+    "@aws-sdk/lib-dynamodb": "^3.400.0",
+    "@aws-sdk/client-s3": "^3.400.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.400.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

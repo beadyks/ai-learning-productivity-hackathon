@@ -1,0 +1,16 @@
+{
+  "name": "response-quality-optimizer",
+  "version": "1.0.0",
+  "description": "Response quality optimizer for beginner-friendly language, examples, and code formatting",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.119",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

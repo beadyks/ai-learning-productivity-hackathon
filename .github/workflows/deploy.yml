@@ -1,0 +1,230 @@
+name: Deploy Voice Learning Assistant
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '20'
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd lambda && npm ci
+          cd ../tests/integration && npm ci
+      
+      - name: Lint code
+        run: npm run lint || true
+      
+      - name: Build project
+        run: |
+          npm run build
+          cd lambda && npm run build
+      
+      - name: Run unit tests
+        run: cd lambda && npm test -- --ci --coverage
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./lambda/coverage/lcov.info
+          flags: unittests
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            lambda/*/dist/
+            cdk.out/
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.api-url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Deploy to staging
+        id: deploy
+        run: |
+          npm run deploy:staging -- --require-approval never --outputs-file outputs-staging.json
+          API_URL=$(cat outputs-staging.json | jq -r '.VoiceLearningAssistantStackStaging.ApiEndpoint')
+          echo "api-url=$API_URL" >> $GITHUB_OUTPUT
+      
+      - name: Upload staging outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: staging-outputs
+          path: outputs-staging.json
+
+  integration-test:
+    name: Integration Tests
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Download staging outputs
+        uses: actions/download-artifact@v3
+        with:
+          name: staging-outputs
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Install test dependencies
+        run: |
+          cd tests/integration
+          npm ci
+      
+      - name: Set environment variables
+        run: |
+          API_ENDPOINT=$(cat outputs-staging.json | jq -r '.VoiceLearningAssistantStackStaging.ApiEndpoint')
+          echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
+          echo "STACK_NAME=VoiceLearningAssistantStack-Staging" >> $GITHUB_ENV
+      
+      - name: Run integration tests
+        run: cd tests/integration && npm test -- --ci
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration-test-results
+          path: tests/integration/coverage/
+
+  deploy-production:
+    name: Deploy to Production
+    needs: integration-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.api-url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Deploy Green environment
+        id: deploy-green
+        run: |
+          npm run deploy:production -- --require-approval never --outputs-file outputs-green.json
+          API_URL=$(cat outputs-green.json | jq -r '.VoiceLearningAssistantStackProduction.ApiEndpoint')
+          echo "api-url=$API_URL" >> $GITHUB_OUTPUT
+      
+      - name: Run smoke tests
+        run: node scripts/smoke-test.js outputs-green.json
+      
+      - name: Health check
+        run: node scripts/health-check.js outputs-green.json
+      
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "Production deployment successful!"
+          echo "API URL: ${{ steps.deploy-green.outputs.api-url }}"
+      
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "Production deployment failed!"
+          echo "Check logs for details"
+
+  notify:
+    name: Send Notifications
+    needs: [build, deploy-staging, integration-test, deploy-production]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Notify on success
+        if: ${{ needs.deploy-production.result == 'success' }}
+        run: echo "Deployment pipeline completed successfully"
+      
+      - name: Notify on failure
+        if: ${{ needs.build.result == 'failure' || needs.deploy-staging.result == 'failure' || needs.integration-test.result == 'failure' || needs.deploy-production.result == 'failure' }}
+        run: echo "Deployment pipeline failed"

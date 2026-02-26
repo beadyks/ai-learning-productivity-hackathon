@@ -1,0 +1,79 @@
+version: 0.2
+
+# Deployment specification for CDK stacks
+# Supports blue-green deployment strategy
+# Used by AWS CodeBuild in CI/CD pipeline
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing deployment dependencies..."
+      - npm ci
+      - npm install -g aws-cdk
+
+  pre_build:
+    commands:
+      - echo "Preparing for deployment..."
+      - echo "Environment: $ENVIRONMENT"
+      - echo "Region: $AWS_REGION"
+      - |
+        if [ "$ENVIRONMENT" = "production" ]; then
+          echo "Production deployment - using blue-green strategy"
+          export STACK_NAME="VoiceLearningAssistantStack-Production"
+        else
+          echo "Staging deployment"
+          export STACK_NAME="VoiceLearningAssistantStack-Staging"
+        fi
+
+  build:
+    commands:
+      - echo "Deploying stack: $STACK_NAME"
+      - |
+        if [ "$ENVIRONMENT" = "production" ]; then
+          # Blue-Green Deployment for Production
+          echo "Step 1: Deploy new version (Green)"
+          cdk deploy $STACK_NAME-Green --require-approval never --outputs-file outputs-green.json
+          
+          echo "Step 2: Run smoke tests on Green environment"
+          node scripts/smoke-test.js outputs-green.json
+          
+          echo "Step 3: Switch traffic to Green (Blue-Green swap)"
+          node scripts/blue-green-swap.js $STACK_NAME
+          
+          echo "Step 4: Monitor Green environment"
+          sleep 300  # 5 minutes monitoring
+          
+          echo "Step 5: Verify Green environment health"
+          node scripts/health-check.js outputs-green.json
+          
+          echo "Step 6: Decommission Blue environment"
+          cdk destroy $STACK_NAME-Blue --force || echo "Blue stack already removed"
+          
+          echo "Step 7: Rename Green to Blue for next deployment"
+          node scripts/rename-stack.js $STACK_NAME-Green $STACK_NAME-Blue
+        else
+          # Standard deployment for Staging
+          cdk deploy $STACK_NAME --require-approval never --outputs-file outputs.json
+        fi
+
+  post_build:
+    commands:
+      - echo "Deployment completed successfully"
+      - |
+        if [ "$ENVIRONMENT" = "production" ]; then
+          echo "Production deployment completed with blue-green strategy"
+        else
+          echo "Staging deployment completed"
+        fi
+      - cat outputs*.json
+
+artifacts:
+  files:
+    - 'outputs*.json'
+  name: DeploymentOutputs
+
+cache:
+  paths:
+    - 'node_modules/**/*'

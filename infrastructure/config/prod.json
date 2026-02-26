@@ -1,0 +1,28 @@
+{
+  "environment": "prod",
+  "region": "ap-south-1",
+  "stackName": "VoiceLearningAssistantStack-Prod",
+  "cors": {
+    "allowedOrigins": [
+      "https://app.voicelearning.ai",
+      "https://www.voicelearning.ai"
+    ]
+  },
+  "cognito": {
+    "callbackUrls": [
+      "https://app.voicelearning.ai/callback"
+    ],
+    "logoutUrls": [
+      "https://app.voicelearning.ai/logout"
+    ]
+  },
+  "costOptimization": {
+    "enableIntelligentTiering": true,
+    "sessionTTLDays": 90,
+    "logRetentionDays": 365
+  },
+  "monitoring": {
+    "enableDetailedMetrics": true,
+    "alarmEmail": "alerts@voicelearning.ai"
+  }
+}

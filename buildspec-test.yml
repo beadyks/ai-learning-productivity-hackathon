@@ -1,0 +1,65 @@
+version: 0.2
+
+# Test specification for unit and integration tests
+# Used by AWS CodeBuild in CI/CD pipeline
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing test dependencies..."
+      - npm ci
+      - cd lambda && npm ci && cd ..
+      - cd tests/integration && npm ci && cd ../..
+
+  pre_build:
+    commands:
+      - echo "Setting up test environment..."
+      - export NODE_ENV=test
+
+  build:
+    commands:
+      - echo "Running unit tests..."
+      - cd lambda
+      - npm test -- --ci --coverage --maxWorkers=2 || true
+      - cd ..
+      
+      - echo "Running integration tests..."
+      - cd tests/integration
+      - npm test -- --ci --coverage --maxWorkers=1
+      - cd ../..
+
+  post_build:
+    commands:
+      - echo "Tests completed"
+      - echo "Generating test reports..."
+
+reports:
+  unit-tests:
+    files:
+      - 'lambda/**/test-results.xml'
+    file-format: 'JUNITXML'
+  
+  integration-tests:
+    files:
+      - 'tests/integration/test-results.xml'
+    file-format: 'JUNITXML'
+  
+  coverage:
+    files:
+      - 'lambda/coverage/clover.xml'
+      - 'tests/integration/coverage/clover.xml'
+    file-format: 'CLOVERXML'
+
+artifacts:
+  files:
+    - 'lambda/coverage/**/*'
+    - 'tests/integration/coverage/**/*'
+  name: TestResults
+
+cache:
+  paths:
+    - 'node_modules/**/*'
+    - 'lambda/node_modules/**/*'
+    - 'tests/integration/node_modules/**/*'

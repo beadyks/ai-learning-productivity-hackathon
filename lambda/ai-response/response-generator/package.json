@@ -1,0 +1,20 @@
+{
+  "name": "response-generator",
+  "version": "1.0.0",
+  "description": "AI response generator using Amazon Bedrock with cost optimization",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.450.0",
+    "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@aws-sdk/lib-dynamodb": "^3.450.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.130",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  }
+}
