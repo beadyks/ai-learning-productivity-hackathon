@@ -270,8 +270,18 @@ class CognitoAuthManager implements AuthManager {
   }
 }
 
-// Export singleton instance
-export const authManager = new CognitoAuthManager();
+// Export singleton instance based on environment
+const isDevelopment = import.meta.env.VITE_DEV_MODE === 'true';
+
+// Simple conditional export
+export const authManager: AuthManager = isDevelopment 
+  ? (() => {
+      console.log('🔧 Development mode: Using mock authentication (no AWS required)');
+      // Import and use mock auth manager
+      const { mockAuthManager } = require('./mockAuthService');
+      return mockAuthManager;
+    })()
+  : new CognitoAuthManager();
 
 // Export class for testing
 export { CognitoAuthManager };

@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useCallback } from 'react';
-import { authManager } from '../services/authService';
+import { authManager } from '../services/authManager';
 import { useUserStore } from '../stores/userStore';
 import type { UserAttributes, CognitoUser, UserProfile } from '../types/user.types';
 
