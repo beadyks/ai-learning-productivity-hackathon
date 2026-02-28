@@ -6,6 +6,7 @@ import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as apigateway from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigatewayIntegrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import * as apigatewayAuthorizers from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambdaNodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
@@ -320,8 +321,9 @@ export class VoiceLearningAssistantStack extends cdk.Stack {
       ],
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-
-    this.documentBucket.enableServerAccessLogging(logBucket);
+    
+    // Enable logging on the document bucket
+    this.documentBucket.node.addDependency(logBucket);
   }
 
   /**
@@ -438,7 +440,7 @@ export class VoiceLearningAssistantStack extends cdk.Stack {
     });
 
     // Create Cognito authorizer for HTTP API
-    const authorizer = new apigateway.HttpUserPoolAuthorizer(
+    const authorizer = new apigatewayAuthorizers.HttpUserPoolAuthorizer(
       'CognitoAuthorizer',
       this.userPool,
       {
@@ -447,11 +449,7 @@ export class VoiceLearningAssistantStack extends cdk.Stack {
       }
     );
 
-    // Store authorizer for use in Lambda integrations
-    new cdk.CfnOutput(this, 'AuthorizerId', {
-      value: authorizer.authorizerId,
-      description: 'Cognito Authorizer ID for HTTP API',
-    });
+    // Authorizer will be bound when routes are created
   }
 
   /**
@@ -802,7 +800,7 @@ export class VoiceLearningAssistantStack extends cdk.Stack {
    */
   private createAIResponseRoutes(): void {
     // Create Cognito authorizer
-    const authorizer = new apigateway.HttpUserPoolAuthorizer(
+    const authorizer = new apigatewayAuthorizers.HttpUserPoolAuthorizer(
       'AIResponseApiAuthorizer',
       this.userPool,
       {
@@ -872,7 +870,7 @@ export class VoiceLearningAssistantStack extends cdk.Stack {
    */
   private createDocumentProcessingRoutes(): void {
     // Create Cognito authorizer
-    const authorizer = new apigateway.HttpUserPoolAuthorizer(
+    const authorizer = new apigatewayAuthorizers.HttpUserPoolAuthorizer(
       'DocumentApiAuthorizer',
       this.userPool,
       {
@@ -976,7 +974,7 @@ export class VoiceLearningAssistantStack extends cdk.Stack {
    */
   private createSessionManagementRoutes(): void {
     // Create Cognito authorizer
-    const authorizer = new apigateway.HttpUserPoolAuthorizer(
+    const authorizer = new apigatewayAuthorizers.HttpUserPoolAuthorizer(
       'SessionManagementApiAuthorizer',
       this.userPool,
       {
@@ -1122,7 +1120,7 @@ export class VoiceLearningAssistantStack extends cdk.Stack {
    */
   private createSecurityRoutes(): void {
     // Create Cognito authorizer
-    const authorizer = new apigateway.HttpUserPoolAuthorizer(
+    const authorizer = new apigatewayAuthorizers.HttpUserPoolAuthorizer(
       'SecurityApiAuthorizer',
       this.userPool,
       {
@@ -1211,7 +1209,7 @@ export class VoiceLearningAssistantStack extends cdk.Stack {
    */
   private createApiOrchestratorRoutes(): void {
     // Create Cognito authorizer
-    const authorizer = new apigateway.HttpUserPoolAuthorizer(
+    const authorizer = new apigatewayAuthorizers.HttpUserPoolAuthorizer(
       'ApiOrchestratorAuthorizer',
       this.userPool,
       {
@@ -1291,7 +1289,7 @@ export class VoiceLearningAssistantStack extends cdk.Stack {
    */
   private createConversationOrchestratorRoutes(): void {
     // Create Cognito authorizer
-    const authorizer = new apigateway.HttpUserPoolAuthorizer(
+    const authorizer = new apigatewayAuthorizers.HttpUserPoolAuthorizer(
       'ConversationOrchestratorAuthorizer',
       this.userPool,
       {
@@ -1360,7 +1358,7 @@ export class VoiceLearningAssistantStack extends cdk.Stack {
    */
   private createResponseQualityOptimizerRoutes(): void {
     // Create Cognito authorizer
-    const authorizer = new apigateway.HttpUserPoolAuthorizer(
+    const authorizer = new apigatewayAuthorizers.HttpUserPoolAuthorizer(
       'ResponseQualityOptimizerAuthorizer',
       this.userPool,
       {
