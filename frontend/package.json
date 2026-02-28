@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node node_modules/vite/bin/vite.js",
-    "dev:full": "concurrently \"npm run mock-server\" \"npm run dev\"",
-    "mock-server": "node mock-server.js",
+    "dev:full": "node node_modules/concurrently/dist/bin/concurrently.js \"npm run mock-server\" \"npm run dev\"",
+    "mock-server": "node mock-server.cjs",
     "build": "node node_modules/typescript/lib/tsc.js && node node_modules/vite/bin/vite.js build",
     "lint": "node node_modules/eslint/bin/eslint.js . --ext .ts,.tsx",
     "preview": "node node_modules/vite/bin/vite.js preview",

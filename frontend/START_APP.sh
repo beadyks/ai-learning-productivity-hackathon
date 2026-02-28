@@ -29,5 +29,15 @@ echo ""
 echo "Press Ctrl+C to stop all servers"
 echo ""
 
-# Start both servers
-npm run dev:full
+# Start mock server in background
+node mock-server.cjs &
+MOCK_PID=$!
+
+# Wait a moment for mock server to start
+sleep 2
+
+# Start frontend dev server
+node node_modules/vite/bin/vite.js
+
+# Cleanup: kill mock server when vite exits
+kill $MOCK_PID 2>/dev/null
